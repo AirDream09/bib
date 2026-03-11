@@ -3,39 +3,58 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>EPUB Reader</title>
+    <title>Mein EPUB Reader</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/epub.js/0.3.88/epub.min.js"></script>
     <style>
-        body { margin: 0; background: #fafafa; }
-        #viewer { width: 100vw; height: 90vh; }
-        .controls { text-align: center; padding: 10px; background: #eee; }
-        button { padding: 10px 20px; cursor: pointer; }
+        body { margin: 0; font-family: sans-serif; background: #222; color: white; }
+        #viewer { width: 100vw; height: 85vh; background: white; }
+        .controls { display: flex; justify-content: space-between; padding: 20px; background: #333; }
+        button { padding: 10px 25px; background: #555; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #777; }
     </style>
 </head>
 <body>
+
     <div id="viewer"></div>
+
     <div class="controls">
         <button id="prev">⬅ Zurück</button>
         <button id="next">Vorwärts ➡</button>
     </div>
 
     <script>
-        // Holt den Dateinamen aus der URL (z.B. reader.html?book=books/test.epub)
+        // 1. Pfad aus der URL holen
         const params = new URLSearchParams(window.location.search);
-        const bookPath = params.get("book");
+        let bookPath = params.get("book");
 
-        const book = ePub(bookPath);
-        const rendition = book.renderTo("viewer", {
-            width: "100%",
-            height: "100%",
-            flow: "paginated"
-        });
+        if (!bookPath) {
+            alert("Kein Buch ausgewählt! Geh zurück zur Startseite.");
+        } else {
+            // 2. Das Buch initialisieren
+            const book = ePub(bookPath);
+            const rendition = book.renderTo("viewer", {
+                width: "100%",
+                height: "100%",
+                flow: "paginated", // Seite für Seite wie ein echtes Buch
+                manager: "default"
+            });
 
-        rendition.display();
+            // 3. Buch anzeigen
+            rendition.display().catch(err => {
+                console.error("Fehler beim Laden:", err);
+                alert("Fehler: Das Buch konnte nicht geladen werden. Prüf mal die Groß/Kleinschreibung vom Dateinamen!");
+            });
 
-        // Buttons steuern
-        document.getElementById("next").addEventListener("click", () => rendition.next());
-        document.getElementById("prev").addEventListener("click", () => rendition.prev());
+            // 4. Steuerung
+            document.getElementById("next").onclick = () => rendition.next();
+            document.getElementById("prev").onclick = () => rendition.prev();
+            
+            // Pfeiltasten auf der Tastatur unterstützen
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "ArrowRight") rendition.next();
+                if (e.key === "ArrowLeft") rendition.prev();
+            });
+        }
     </script>
 </body>
 </html>
